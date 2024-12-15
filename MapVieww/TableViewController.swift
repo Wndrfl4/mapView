@@ -10,6 +10,8 @@ import UIKit
 class BuildingTableViewCell: UITableViewCell {
     @IBOutlet weak var buildingImageView: UIImageView!
     @IBOutlet weak var infoLabel: UILabel!
+    @IBOutlet weak var namlabel: UILabel!
+    
 }
 
 class TableViewController: UITableViewController {
@@ -47,12 +49,12 @@ class TableViewController: UITableViewController {
         // Настройка текста и изображения
         cell.infoLabel.text = building.info
         cell.buildingImageView.image = UIImage(named: building.image)
-
+        cell.namlabel.text = building.name
         return cell // Не забудьте вернуть ячейку!
     }
 
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 200
+        return 250
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

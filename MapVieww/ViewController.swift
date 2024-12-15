@@ -11,6 +11,8 @@ import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureRecognizerDelegate, MKMapViewDelegate {
     @IBOutlet weak var mapview: MKMapView!
     
+    var destinationCoordinate: CLLocationCoordinate2D?
+    
     let locationManager = CLLocationManager()
     
     var userLocation = CLLocation()
@@ -73,24 +75,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
     }
     // Вызывается каждый раз при изменении местоположения нашего пользователя
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
         userLocation = locations[0]
         
-        print(userLocation)
-        
+        // Если активна функция Follow Me, обновляем область карты
         if followMe {
-            // Дельта - насколько отдалиться от координат пользователя по долготе и широте
-            let latDelta:CLLocationDegrees = 0.01
-            let longDelta:CLLocationDegrees = 0.01
-
-            // Создаем область шириной и высотой по дельте
+            let latDelta: CLLocationDegrees = 0.01
+            let longDelta: CLLocationDegrees = 0.01
             let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-            
-            // Создаем регион на карте с моими координатоми в центре
             let region = MKCoordinateRegion(center: userLocation.coordinate, span: span)
-            
-            // Приближаем карту с анимацией в данный регион
             mapview.setRegion(region, animated: true)
+        }
+        
+        // Если есть координаты назначения, строим маршрут
+        if let destination = destinationCoordinate {
+            showRoute(from: userLocation.coordinate, to: destination)
+            destinationCoordinate = nil // Сбрасываем, чтобы маршрут не строился повторно
         }
         
     }
@@ -195,6 +194,29 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
             self.mapview.setRegion(MKCoordinateRegion(rect), animated: true)
         }
     }
+    func showRoute(from source: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D) {
+        let sourcePlacemark = MKPlacemark(coordinate: source)
+        let destinationPlacemark = MKPlacemark(coordinate: destination)
+
+        let directionRequest = MKDirections.Request()
+        directionRequest.source = MKMapItem(placemark: sourcePlacemark)
+        directionRequest.destination = MKMapItem(placemark: destinationPlacemark)
+        directionRequest.transportType = .automobile
+
+        let directions = MKDirections(request: directionRequest)
+        directions.calculate { response, error in
+            guard let route = response?.routes.first else {
+                print("Ошибка построения маршрута: \(error?.localizedDescription ?? "нет данных")")
+                return
+            }
+            
+            // Добавляем маршрут на карту
+            self.mapview.addOverlay(route.polyline, level: .aboveRoads)
+            // Настраиваем видимую область маршрута
+            self.mapview.setVisibleMapRect(route.polyline.boundingMapRect, animated: true)
+        }
+    }
+
     
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         // Настраиваем линию

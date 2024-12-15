@@ -56,6 +56,16 @@ class DetailViewController: UIViewController,CLLocationManagerDelegate, UIGestur
             print("Selected annotation: \(annotation.title ?? "No Title")")
         }
     }
+    @IBAction func mapSwitch(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+           let mapVC = storyboard.instantiateViewController(withIdentifier: "ViewController") as! ViewController
+           
+           // Передача координат из текущего здания
+           mapVC.destinationCoordinate = CLLocationCoordinate2D(latitude: building.lat, longitude: building.long)
+           
+           // Переход на экран
+           navigationController?.pushViewController(mapVC, animated: true)
+    }
     
 
     /*
